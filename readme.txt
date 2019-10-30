@@ -14,10 +14,65 @@ This is the amazing PJS standard media manager built by the PlainJoe Studios tea
 
 At a glance, this plugin does the following:
 
-* Manages your media in a series like format.
 * Displays your media elegantly to website visitors.
+* Creates an audio podcast feed.
+* Includes tags for series, speakers, and keywords to your media items.
 
 == Changelog ==
+
+= 2.1.6 =
+* Cleaned up podcast URL code.
+* Added pagination to the series display.
+* Fixed video poster graphic when using an mp4.
+* Removed admin.js from loading on the settings page as it is no longer needed.
+
+= 2.1.5 =
+* Cleaned up code.
+* Added new wide series graphic.
+* Added requirement for both graphics.
+* Updated series option to now be only 1 selectable taxonomy.
+* Removed requirement for post graphic.
+
+= 2.1.4 =
+* Updated responsive CSS.
+* Fixed podcast bug.
+
+= 2.1.3 =
+* Cleaned up code and moved ajax directory.
+* Added Font Awesome icon set.
+* Updated media page links with Font Awesome icons.
+* Updated media display container styles.
+* Removed requirement for Video URL.
+
+= 2.1.2 =
+* Added a link to the podcast RSS feed URL on the settings.
+
+= 2.1.1 =
+* Updated filter bar to now display below the archive title.
+
+= 2.1.0 =
+* Added option to display by series instead of individual media items.
+* Added option for series graphic on series taxonomy.
+
+= 2.0.0 =
+* Cleaned up code and naming conventions.
+* Added series as a taxonomy.
+* Updated single media item ACF settings.
+* Updated post type settings page.
+* Updated front end styles.
+* Removed series as a parent item.
+
+= 1.2.0 =
+* Updated media settings to more appropriately reflect the change from series to singles on the landing page.
+* Updated responsive CSS.
+
+= 1.1.9 =
+* Added topic/series/speaker filters to landing page.
+* Updated landing page to show by single media item instead of series.
+* Updated some CSS.
+
+= 1.1.8 =
+* Updated CSS for series image hovering.
 
 = 1.1.7 =
 * Updated videos to play native in iOS and removed speed setting.

@@ -4,12 +4,10 @@
  */
 
 	global $videoUrl;
-	global $seriesId;
-	
-	$seriesGraphic = get_field('series_graphic', $seriesId);
+	global $graphicURL;
 	
 	echo '<div class="video-mp4">';
-		echo '<video poster="' . $seriesGraphic['sizes']['pjs-mm'] . '" playsinline controls>';
+		echo '<video poster="' . $graphicURL . '" playsinline controls>';
 			echo '<source src="' . $videoUrl . '" type="video/mp4" />';
 		echo '</video>';
 	echo '</div>';

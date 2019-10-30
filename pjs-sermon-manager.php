@@ -2,8 +2,8 @@
 /**
  * Plugin Name: PJS Media Manager
  * Plugin URI: https://www.plainjoestudios.com/
- * Description: Manage your media and display them elegantly on your website.
- * Version: 1.1.7
+ * Description: Elegantly displays your video and audio messages.
+ * Version: 2.1.6
  * Author: PlainJoe Studios
  * Author URI: https://www.plainjoestudios.com/
  * License: GPLv2 or later
@@ -52,15 +52,20 @@ if (!class_exists('pjsMediaManager')) {
 		
 		function enqueue() {
 			// plugin JS/CSS
-			wp_enqueue_style('pjs-media-manager', PLUGIN_URL . '/css/pjs.css', null);
-			wp_enqueue_style('pjs-media-manager-responsive', PLUGIN_URL . '/css/responsive.css', null);
-			wp_enqueue_script('pjs-media-manager-jquery', PLUGIN_URL . '/js/jquery.min.js', null);
-			wp_enqueue_script('pjs-media-manager-javascript', PLUGIN_URL . '/js/pjs.js', null);
-			wp_enqueue_script('pjs-media-manager-ajax', PLUGIN_URL . '/includes/ajax/load-more.js', null);
+			wp_enqueue_style('pjs-media-manager', PLUGIN_URL . 'css/pjs.css', null);
+			wp_enqueue_style('pjs-media-manager-responsive', PLUGIN_URL . 'css/responsive.css', null);
+			wp_enqueue_script('pjs-media-manager-jquery', PLUGIN_URL . 'js/jquery.min.js', null);
+			wp_enqueue_script('pjs-media-manager-js', PLUGIN_URL . 'js/pjs.js', null);
 			
 			// included plyr JS/CSS
-			wp_enqueue_style('pjs-media-manager-plyr', PLUGIN_URL . '/includes/plyr/plyr.min.css', null);
-			wp_enqueue_script('pjs-media-manager-plyr', PLUGIN_URL . '/includes/plyr/plyr.min.js', null);
+			wp_enqueue_style('pjs-media-manager-font-awesome', PLUGIN_URL . 'includes/fontawesome/css/all.min.css', null);
+			wp_enqueue_style('pjs-media-manager-plyr', PLUGIN_URL . 'includes/plyr/plyr.min.css', null);
+			wp_enqueue_script('pjs-media-manager-plyr', PLUGIN_URL . 'includes/plyr/plyr.min.js', null);
+		}
+		
+		function archiveAJAX() {
+			// load more AJAX call
+			wp_enqueue_script('pjs-media-manager-ajax', PLUGIN_URL . 'ajax/load-more.js', null);
 		}
 		
 		// setup templates
@@ -68,8 +73,11 @@ if (!class_exists('pjsMediaManager')) {
 			$queryVars = get_query_var('podcast-type');
 			
 			if (is_singular('pjs_media')) {
-				return PLUGIN_PATH . '/templates/page/type.php';
+				$this->register_scripts();
+				return PLUGIN_PATH . '/templates/page/single.php';
 			} elseif (is_post_type_archive('pjs_media')) {
+				$this->register_scripts();
+				$this->archiveAJAX();
 				return PLUGIN_PATH . 'templates/page/archive.php';
 			}
 			
@@ -83,13 +91,15 @@ if (!class_exists('pjsMediaManager')) {
 	}
 	
 	$pjsMediaManager = new pjsMediaManager();
-	$pjsMediaManager->register_scripts();
 	
 	// activation
 	register_activation_hook(__FILE__, array($pjsMediaManager, 'activate'));
 	
 	// deactivation
 	register_deactivation_hook(__FILE__, array($pjsMediaManager, 'deactivate'));
+	
+	
+	
 	
 	// flush rewrite rules upon saving the settings
 	function pjs_mm_settings_update() {
@@ -127,7 +137,7 @@ if (!class_exists('pjsMediaManager')) {
 	add_action('acf/init', 'pjs_mm_create_acf_fields');
 
 
-	// creates the podcast feed
+	// create the podcast feed
 	function pjs_mm_podcast_query_vars($vars) {
 		$vars[] = 'podcast-type';
 		return $vars;
@@ -140,5 +150,16 @@ if (!class_exists('pjsMediaManager')) {
 		flush_rewrite_rules();
 	}
 	add_action('init', 'pjs_mm_podcast_rewrite_rule', 10, 0);
+	
+	
+	// adds admin.js to WP admin
+	// function pjs_mm_admin_scripts($hook) {
+		// if ('pjs_media_page_acf-options-settings' != $hook) {
+			// return;
+		// } else {
+			// wp_enqueue_script('pjs-media-manager-admin-js', PLUGIN_URL . '/js/admin.js', null, null, true);
+		// }
+	// }
+	// add_action('admin_enqueue_scripts', 'pjs_mm_admin_scripts');
 	
 }

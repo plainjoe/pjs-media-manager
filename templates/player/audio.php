@@ -4,9 +4,11 @@
  */
 
 	global $audioUrl;
+	global $graphicURL;
 	
 	if ($audioUrl) {
 		echo '<div class="audio">';
+			echo '<div class="image" style="background:url(' . $graphicURL . ') no-repeat center / cover;"></div>';
 			echo '<audio controls>';
 				echo '<source src="' . $audioUrl . '" type="audio/mp3" />';
 			echo '</video>';

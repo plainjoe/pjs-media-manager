@@ -4,42 +4,41 @@
  */
  
 get_header();
-
-
+	
 	$postType = get_post_type();
-	$seriesArchiveTitle = get_field('pjs_mm_series_title', 'option');
-	$loadMoreText = get_field('pjs_mm_load_more_text', 'option');
+	$archiveTitle = get_field('pjs_mm_archive_title', 'option');
+	$loadMoreLabel = get_field('pjs_mm_load_more_label', 'option');
+	$displaySeries = get_field('pjs_mm_display_series', 'option');
+	
+	if (!$loadMoreLabel) {
+		$loadMoreLabel = 'Load More Media';
+	}
 	
 	// latest media item
 	$latestArgs = array(
 		'post_type' => $postType,
 		'posts_per_page' => 1,
-		'orderby' => 'meta_value',
-		'meta_key' => 'date',
+		'orderby' => 'date',
 		'order' => 'DESC',
-		'meta_query' => array(
-			array(
-				'key'   => 'type',
-				'value' => 'item',
-			),
-		),
 	);
 	$latestQuery = new WP_Query($latestArgs);
 	
 	if ($latestQuery->have_posts()) {
 		while ($latestQuery->have_posts()) { $latestQuery->the_post();
 		
-			$seriesTitle = get_the_title($post->post_parent);
-			$seriesGraphic = get_field('series_graphic', $post->post_parent);
+			$graphic = get_field('graphic', $post->post_parent);
 			$title = get_the_title();
-			$date = get_field('date');
+			$date = new DateTime(get_the_date());
+			$date = $date->format('F j, Y');
 			$videoUrl = get_field('video_url');
 			$audioUrl = get_field('audio_url');
 			$notesUrl = get_field('notes_url');
+			$series = get_field('series');
+			$seriesGraphic = get_field('series_graphic', 'pjs-mm-series_' . $series->term_id);
 			$desc = get_field('description');
 			
 			$speakers = '';
-			$speakersList = wp_get_post_terms($post->ID, 'speakers');
+			$speakersList = wp_get_post_terms($post->ID, 'pjs-mm-speakers');
 			$speakersCount = count($speakersList);
 			$i = 1;
 			
@@ -52,6 +51,20 @@ get_header();
 				$i++;
 			}
 			
+			$keywords = '';
+			$keywordsList = wp_get_post_terms($post->ID, 'pjs-mm-keywords');
+			$keywordsCount = count($keywordsList);
+			$k = 1;
+			
+			foreach ($keywordsList as $keyword) {
+				if ($k == $keywordsCount) {
+					$keywords .= $keyword->name;
+				} else {
+					$keywords .= $keyword->name . ', ';
+				}
+				$k++;
+			}
+			
 			if (strpos($videoUrl, 'youtube.com')) {
 				$videoType = 'youtube';
 			} elseif (strpos($videoUrl, 'youtu.be')) {
@@ -62,8 +75,16 @@ get_header();
 				$videoType = 'mp4';
 			}
 			
+			if ($graphic) {
+				$graphicURL = $graphic['sizes']['pjs-mm'];
+			} elseif ($seriesGraphic) {
+				$graphicURL = $seriesGraphic['sizes']['large'];
+			} else {
+				$graphicURL = '/wp-content/plugins/pjs-media-manager/images/placeholder.jpg';
+			}
+			
 			echo '<section class="pjs-mm-video">';
-				echo '<div class="bg" style="background:url(' . $seriesGraphic['url'] . ') no-repeat center / cover;"></div>';
+				echo '<div class="bg" style="background:url(' . $graphicURL . ') no-repeat center / cover;"></div>';
 				echo '<div class="wrapper pjs-mm-trans">';
 					if ($videoType == 'youtube') {
 						include(WP_PLUGIN_DIR . '/pjs-media-manager/templates/player/youtube.php');
@@ -76,16 +97,16 @@ get_header();
 					if ($audioUrl || $notesUrl) {
 						echo '<div class="links">';
 							if ($audioUrl) {
-								echo '<a href="javascript:;" class="show-video">Video</a>';
-								echo '<a href="javascript:;" class="show-audio">Audio</a>';
+								echo '<a href="javascript:;" class="show-video"><i class="fal fa-play-circle"></i> Video</a>';
+								echo '<a href="javascript:;" class="show-audio"><i class="fal fa-microphone-alt"></i> Audio</a>';
 							}
 							if ($notesUrl) {
-								echo '<a href="' . $notesUrl . '" target="_blank">Notes</a>';
+								echo '<a href="' . $notesUrl . '" target="_blank"><i class="fal fa-edit"></i> Notes</a>';
 							}
 						echo '</div>';
 					}
 					echo '<div class="meta">';
-						echo '<h4>' . $seriesTitle . '</h4>';
+						echo '<h4>' . $series->name . '</h4>';
 						echo '<h1>' . $title . '</h1>';
 						if ($speakers) {
 							echo '<p>' . $date . ' - <b>' . $speakers . '</b></p>';
@@ -99,70 +120,83 @@ get_header();
 		}
 	}
 	
-	// series archive
+	// total media count
 	$k = 0;
 	
-	$seriesArgs = array(
+	$totalArgs = array(
 		'post_type' => $postType,
 		'posts_per_page' => -1,
-		'orderby' => 'meta_value',
-		'meta_key' => 'series_start_date',
+		'orderby' => 'date',
 		'order' => 'DESC',
-		'meta_query' => array(
-			array(
-				'key'   => 'type',
-				'value' => 'series',
-			),
-		),
 	);
-	$seriesQuery = new WP_Query($seriesArgs);
+	$totalQuery = new WP_Query($totalArgs);
 	
-	if ($seriesQuery->have_posts()) {
-		while ($seriesQuery->have_posts()) { $seriesQuery->the_post();
-		
-			$seriesId = get_the_ID();
-			
-			$endDateArgs = array(
-				'post_type' => $postType,
-				'posts_per_page' => 1,
-				'post_parent' => $seriesId,
-				'orderby' => 'meta_value',
-				'meta_key' => 'date',
-				'order' => 'DESC',
-			);
-			$endDateQuery = new WP_Query($endDateArgs);
-			
-			if ($endDateQuery->have_posts()) {
-				while ($endDateQuery->have_posts()) { $endDateQuery->the_post();
-					$endDate = get_field('date');
-				}
-			}
-			
-			if ($endDate != '') {
-				$k++;
-			}
-		
+	if ($totalQuery->have_posts()) {
+		while ($totalQuery->have_posts()) { $totalQuery->the_post();
+			$k++;
 		}
 	}
 	
 	echo '<section class="pjs-mm-archive">';
 		echo '<div class="wrapper">';
-			if ($seriesArchiveTitle) {
-				echo '<h1>' . $seriesArchiveTitle . '</h1>';
+			if ($archiveTitle) {
+				echo '<h1>' . $archiveTitle . '</h1>';
 			}
-			echo '<div class="cards" post-type="' . $postType . '" page="1" total="' . $k . '">';
-				// cards are added through AJAX call in includes/ajax/load-more.js
+			if (!$displaySeries) {
+				echo '<div class="filters">';
+					echo '<div class="filter">';
+						echo '<div class="container">';
+							echo '<select filter="keywords">';
+								echo '<option value="all">Filter by Keyword</option>';
+								
+								$keywords = get_terms('pjs-mm-keywords');
+								
+								foreach ($keywords as $keyword) {
+									echo '<option value="' . $keyword->term_id . '">' . $keyword->name . '</option>';
+								}
+								
+							echo '</select>';
+						echo '</div>';
+					echo '</div>';
+					echo '<div class="filter">';
+						echo '<div class="container">';
+							echo '<select filter="series">';
+								echo '<option value="all">Filter by Series</option>';
+								
+								$series = get_terms('pjs-mm-series');
+								
+								foreach ($series as $series) {
+									echo '<option value="' . $series->term_id . '">' . $series->name . '</option>';
+								}
+								
+							echo '</select>';
+						echo '</div>';
+					echo '</div>';
+					echo '<div class="filter">';
+						echo '<div class="container">';
+							echo '<select filter="speakers">';
+								echo '<option value="all">Filter by Speaker</option>';
+								
+								$speakers = get_terms('pjs-mm-speakers');
+								
+								foreach ($speakers as $speaker) {
+									echo '<option value="' . $speaker->term_id . '">' . $speaker->name . '</option>';
+								}
+								
+							echo '</select>';					
+						echo '</div>';
+					echo '</div>';
+				echo '</div>';
+			}
+			echo '<div class="cards" post-type="' . $postType . '" keywords="all" series="all" speakers="all" page="1" total="' . $k . '" offset="0">';
+				// cards are added through an AJAX call located in ajax/load-more.js
 			echo '</div>';
+			echo '<div class="no-results"><p>No results found. Try changing the filters.</p></div>';
 			echo '<div class="loader"><img src="' . plugins_url('/pjs-media-manager/images/loader.svg') . '" /></div>';
-			echo '<div class="btns">';
-				if ($loadMoreText) {
-					echo '<a href="javascript:;">' . $loadMoreText . '</a>';
-				} else {
-					echo '<a href="javascript:;">Load More</a>';
-				}
+			echo '<div class="btns center">';
+				echo '<a href="javascript:;">' . $loadMoreLabel . '</a>';
 			echo '</div>';
 		echo '</div>';
 	echo '</section>';
-
 
 get_footer();
